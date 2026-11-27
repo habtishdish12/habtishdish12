@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="am"><head><meta charset="utf-8">
+<title>ሀብትሽ ዲሽ</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* v9 merged onto live 1795701211. Layout: app shell. Left drawer (permanent on wide screens), sticky top bar, scrolling main with horizontal snap sliders, fixed bottom tab bar with a centre plus button for the owner. */
+:root{
+  --bg:#f2f5f9; --surface:#ffffff; --surface2:#e9eef5; --ink:#0f1a2c; --muted:#556178; --line:#d7dfea;
+  --accent:#1457d9; --on-accent:#ffffff; --signal:#c77d00; --good:#0f7b4f; --bad:#c0362c;
+  --f-body:"Noto Sans Ethiopic","Segoe UI",system-ui,sans-serif; --f-head:"Space Grotesk","Noto Sans Ethiopic","Segoe UI",system-ui,sans-serif;
+  --gutter:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a111f; --surface:#121c31; --surface2:#1a2744; --ink:#e8eef9; --muted:#95a3ba; --line:#243453;
+  --accent:#6aa5ff; --on-accent:#08111f; --signal:#f2b134; --good:#4cc791; --bad:#ff7f73; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a111f; --surface:#121c31; --surface2:#1a2744; --ink:#e8eef9; --muted:#95a3ba; --line:#243453;
+  --accent:#6aa5ff; --on-accent:#08111f; --signal:#f2b134; --good:#4cc791; --bad:#ff7f73; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:auto}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px));}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:60}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.shell{display:grid;grid-template-columns:1fr;min-height:100vh}
+@media(min-width:900px){.shell{grid-template-columns:280px 1fr}}
+/* drawer */
+.drawer{position:fixed;top:0;bottom:0;left:0;width:min(86vw,300px);background:var(--surface);border-right:1px solid var(--line);
+  transform:translateX(-102%);transition:transform .22s ease;z-index:80;overflow-y:auto;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
+.drawer.open{transform:none}
+.scrim{position:fixed;inset:0;background:rgba(5,10,20,.5);z-index:70;display:none}
+.scrim.show{display:block}
+@media(min-width:900px){.drawer{position:sticky;top:0;height:100vh;transform:none;width:auto;z-index:10}.scrim{display:none!important}.burger{display:none!important}}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.brand b{font-family:var(--f-head);font-size:20px;letter-spacing:.2px}
+.brand small{display:block;color:var(--muted);font-size:12px}
+.lg{width:36px;height:36px;border-radius:50%;object-fit:cover;flex:none}
+.brand .lg{width:44px;height:44px}
+.hero .hl{width:84px;height:84px;border-radius:50%;object-fit:cover;position:relative;border:3px solid var(--surface2)}
+.logo{width:40px;height:40px;border-radius:12px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.nav{display:flex;flex-direction:column;gap:2px;margin-bottom:18px}
+.nav button{display:flex;align-items:center;gap:12px;background:none;border:0;padding:11px 12px;border-radius:10px;text-align:left;cursor:pointer;color:var(--ink);font-weight:600}
+.nav button svg{width:20px;height:20px;flex:none;color:var(--muted)}
+.nav button.on{background:var(--surface2);color:var(--accent)}
+.nav button.on svg{color:var(--accent)}
+.dlabel{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600}
+.chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.lnk{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink);margin-bottom:6px;font-size:14px}
+.lnk span{min-width:0;overflow-wrap:anywhere}
+/* main */
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;padding:10px max(var(--gutter),env(safe-area-inset-right,0px)) 10px max(var(--gutter),env(safe-area-inset-left,0px))}
+.top h1{font-family:var(--f-head);font-size:18px;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ib{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;flex:none}
+.ib svg{width:20px;height:20px}
+.page{padding:18px max(var(--gutter),env(safe-area-inset-right,0px)) calc(110px + env(safe-area-inset-bottom,0px)) max(var(--gutter),env(safe-area-inset-left,0px));max-width:1100px;width:100%}
+h2{font-family:var(--f-head);font-size:20px;margin:26px 0 10px;text-wrap:balance}
+h2:first-child{margin-top:0}
+.sub{color:var(--muted);margin:0 0 12px}
+/* hero */
+.hero{border-radius:20px;background:var(--surface);border:1px solid var(--line);padding:20px;position:relative;overflow:hidden;display:grid;gap:14px}
+.hero h2{font-size:26px;margin:0;max-width:20ch}
+.hero p{margin:0;color:var(--muted);max-width:46ch}
+.hero svg.orbit{position:absolute;right:-30px;top:-10px;width:260px;height:180px;opacity:.9;pointer-events:none}
+.hero .acts{display:flex;flex-wrap:wrap;gap:8px;position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:10px 16px;font-weight:700;cursor:pointer;text-decoration:none;color:var(--ink)}
+.btn.pri{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:9px}
+.btn.del{color:var(--bad);border-color:var(--bad)}
+/* sliders */
+.slider{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 10px;margin:0 -2px;-webkit-overflow-scrolling:touch}
+.slider>*{scroll-snap-align:start;flex:none}
+.tile{width:96px;border-radius:14px;border:1px solid var(--line);background:var(--surface);padding:10px;display:flex;flex-direction:column;gap:10px;cursor:pointer;text-align:left}
+.tile svg{width:22px;height:22px;color:var(--accent)}
+.tile b{font-size:12px;line-height:1.25}
+.card{border:1px solid var(--line);background:var(--surface);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.slider .card{width:132px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+.ph{aspect-ratio:4/3;background:var(--surface2);display:grid;place-items:center;color:var(--muted);max-width:100%}
+.ph svg{width:32px;height:32px}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.cb{padding:12px 12px 14px;min-height:64px;justify-content:center;display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.cb h3{margin:0;font-size:13px;line-height:1.3;overflow-wrap:anywhere}
+.cb p{margin:0;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.price{font-family:var(--f-head);font-weight:700;color:var(--signal)}
+.phb{border:0;padding:0;width:100%;cursor:pointer;display:grid}
+.plus-sm{margin-left:auto;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--muted);flex:none;padding:0}
+.plus-sm svg{width:14px;height:14px}
+.dimg{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:var(--surface2)}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;background:var(--surface2);color:var(--muted);align-self:flex-start}
+.tag.ex{background:transparent;border:1px dashed var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.freq{display:grid;gap:4px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 10px;min-width:0;font-size:13px}
+.freq .pos{font-family:var(--f-head);font-weight:700;color:var(--accent)}
+.empty{border:1px dashed var(--line);border-radius:16px;padding:22px;color:var(--muted);text-align:center}
+.search{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);margin-bottom:14px}
+.box{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px;display:grid;gap:10px}
+.acc{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;flex-wrap:wrap}
+.acc b{display:block;font-size:13px;color:var(--muted)}
+.acc span{font-family:var(--f-head);font-size:17px;font-weight:700;letter-spacing:.4px;overflow-wrap:anywhere}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+.chk:last-child{border:0}
+.chk input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--accent)}
+ol.steps{margin:0;padding-left:20px;display:grid;gap:8px}
+/* bottom bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:55;background:var(--surface);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(5,1fr);align-items:end;
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+@media(min-width:900px){.bar{left:280px}}
+.bar button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;min-width:0}
+.bar button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar button svg{width:22px;height:22px}
+.bar button.on{color:var(--accent)}
+.bar .fab{align-self:center}
+.bar .fab i{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;margin-top:-26px;border:4px solid var(--surface);box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.bar .fab i svg{width:26px;height:26px}
+/* modal */
+.modal{position:fixed;inset:0;z-index:90;background:rgba(5,10,20,.6);display:none;align-items:flex-end;justify-content:center}
+.modal.show{display:flex}
+@media(min-width:700px){.modal{align-items:center}}
+.sheet{background:var(--surface);width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px max(var(--gutter),env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(var(--gutter),env(safe-area-inset-left,0px));display:grid;gap:10px}
+@media(min-width:700px){.sheet{border-radius:20px}}
+.sheet h3{margin:0;font-family:var(--f-head);font-size:19px}
+label{display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)}
+input[type=text],input[type=password],input[type=number],select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+.msg{font-size:13px;min-height:18px}
+.mrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.mrow b{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}
+.mrow small{color:var(--muted);display:block;font-weight:400}
+.mlist{display:grid;gap:6px;max-height:48vh;overflow-y:auto}
+.msg.err{color:var(--bad)} .msg.ok{color:var(--good)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;z-index:100;font-size:13px;font-weight:700;display:none}
+.toast.show{display:block}
+@media(prefers-reduced-motion:reduce){.drawer{transition:none}}
+</style>
+
+</head><body>
+<div class="shell">
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer"></aside>
+  <div class="main">
+    <header class="top">
+      <button class="ib burger" data-act="menu" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <img class="lg" src="logo.jpg" alt="" width="36" height="36"><h1 id="ttl">ሀብትሽ ዲሽ</h1>
+      <select id="langSel" class="ib" style="width:auto;max-width:84px;padding:0 4px;font-size:12px" aria-label="Language">
+        <option value="am">አማርኛ</option><option value="en">English</option><option value="ti">ትግርኛ</option><option value="om">Afaan Oromoo</option><option value="so">Soomaali</option>
+      </select>
+      <button class="ib" data-act="theme" aria-label="Theme" id="themeBtn"></button>
+    </header>
+    <main class="page" id="page"></main>
+  </div>
+</div>
+<nav class="bar" id="bar"></nav>
+<div class="modal" id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+var TG_MAIN="https://t.me/Habtshesoftware", TG_DISC="https://t.me/ethiodishecom";
+var USERS=["habtamu7782","habtish77dish"], PHONES=["0977822121","0970060671"];
+var ACCOUNTS=[{k:"cbe",n:"1000643121739"},{k:"boa",n:"88736613"},{k:"tele",n:"0977822121"},{k:"tele",n:"0970060671"}];
+var ADMIN_HASH=2954575893835747;
+function h53(str){var h1=0xdeadbeef,h2=0x41c6ce57;for(var i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)}
+
+var T={
+am:{home:"መነሻ",market:"ገበያ",freq:"ፍሪኩዌንሲ",soft:"ሶፍትዌር",inst:"ዲሽ ሰሪዎች",guide:"የመትከያ መመሪያ",order:"ሰርቨር መክፈያ",pay:"ክፍያ",chan:"ቻናሎች",add:"ጨምር",period:"የሚከፍሉበት ጊዜ",d1:"1 ወር",d3:"3 ወር",d6:"6 ወር",d12:"1 ዓመት",srvh:"ሲሪያል ቁጥርና ስልክ ቁጥር ያስገቡ፣ የሚከፍሉበትን ጊዜ ይምረጡ።",srvt:"ሰርቨር ክፍያ",chpw:"የይለፍ ቃል ቀይር",cur:"አሁን ያለው የይለፍ ቃል",npw:"አዲስ የይለፍ ቃል",npw2:"አዲሱን እንደገና ያስገቡ",pwshort:"ቢያንስ 6 ቁምፊ ያስፈልጋል።",pwdiff:"ሁለቱ አዲስ የይለፍ ቃሎች አይመሳሰሉም።",pwdone:"የይለፍ ቃል ተቀይሯል",edit:"አስተካክል",manage:"የተጨመሩ",back:"ተመለስ",newi:"አዲስ ጨምር",
+ hero_t:"ዲሽ ለመግዛት፣ ለመትከልና ለማስተካከል የሚያስፈልግዎ ሁሉ",hero_s:"ዲሽና መሳሪያዎች፣ ፍሪኩዌንሲዎች፣ ሶፍትዌርና ሰርቨር ፋይሎች፣ እንዲሁም የዲሽ ሰሪዎች ማገናኛ በአንድ ቦታ። ትዕዛዝ በቀጥታ ወደ ቴሌግራም ይላካል።",
+ quick:"ፈጣን መግቢያ",latest:"አዳዲስ ዕቃዎች",sats:"ሳተላይቶች",search:"ፈልግ...",price:"ዋጋ",askprice:"ዋጋ ለማወቅ ይደውሉ",orderbtn:"ዕዘዝ",sample:"ምሳሌ",
+ empty:"እስካሁን ምንም አልተጨመረም።",title:"ርዕስ",desc:"መግለጫ",extra:"ተጨማሪ ዝርዝር (ፍሪኩዌንሲ፣ ሳተላይት፣ አካባቢ)",photo:"ፎቶ",file:"ፋይል (ሶፍትዌር / ሰርቨር)",type:"ዓይነት",
+ t_product:"የገበያ ዕቃ",t_freq:"ፍሪኩዌንሲ",t_soft:"ሶፍትዌር / ፋይል",t_inst:"ዲሽ ሰሪ",save:"አስቀምጥ",cancel:"ተወው",close:"ዝጋ",pw:"የይለፍ ቃል",pwh:"ይህን ማስገቢያ የሚከፍተው ባለቤቱ ብቻ ነው።",unlock:"ክፈት",wrong:"የይለፍ ቃሉ ትክክል አይደለም።",
+ saving:"በማስቀመጥ ላይ...",saved:"ተቀምጧል",fail:"ማስቀመጥ አልተቻለም። ገጹን በባለቤት አካውንት (ክላውድ ላይ በገቡበት) ይክፈቱ።",link:"የፋይል ሊንክ (ለምሳሌ የቴሌግራም ቻናል ሊንክ)",tfail:"ፋይሉ የማይደገፍ ዓይነት ነው። ሊንክ ይጠቀሙ።",del:"ሰርዝ",sure:"እርግጠኛ ነህ?",openf:"ፋይል ክፈት",
+ name:"ስም",phone:"ስልክ",area:"አካባቢ",note:"ማስታወሻ",serial:"ሲሪያል ቁጥር",serialh:"የሪሲቨርዎን ሲሪያል ቁጥር ያስገቡ",msg:"መልዕክት",copy:"ቅዳ",copied:"ተቀድቷል",tg:"በቴሌግራም ላክ",tgnote:"ከታች ያለውን የቴሌግራም ቁልፍ ሲጫኑ ቴሌግራም ይከፈታል፤ መልዕክቱ ተጽፎ ይጠብቃል። «ላክ» ብቻ ይጫኑ።",
+ reg:"ዲሽ ሰሪ ሆኜ ልመዝገብ",regt:"ዲሽ ሰሪዎች መመዝገቢያ",regs:"ዲሽ ሰሪ ከሆኑ ስምዎን፣ ስልክዎንና የሚሰሩበትን አካባቢ ይላኩ። ዝርዝርዎ በገጹ ላይ ይጨመራል።",
+ main_ch:"ዋና ቻናል",disc_ch:"መወያያ ቻናል",contact:"ያግኙን",acc:"የክፍያ አካውንቶች",cbe:"ንግድ ባንክ (CBE)",boa:"አቢሲኒያ ባንክ (BoA)",tele:"ቴሌብር",
+ tools:"ለዲሽ ሰሪ የሚያስፈልጉ መሳሪያዎች",steps:"የመትከል ደረጃዎች",theme:"ጨለማ / ብሩህ",lang:"ቋንቋ",order_to:"ትዕዛዝ",nodb:"መረጃ ማምጣት አልተቻለም።",
+ ex_note:"ይህ ምሳሌ ነው። ትክክለኛው መረጃ በባለቤቱ ይጨመራል።",pickup:"ዕቃ",hello:"ሰላም፣ ማዘዝ እፈልጋለሁ።",
+ tl:["የዲሽ ሳህን (መጠኑ እንደ ሳተላይቱ)","LNB እና LNB መያዣ","ሪሲቨር እና ሪሞት","RG6 ኮአክሲያል ኬብል","F-ኮኔክተሮች እና ውሃ የማያስገባ ቴፕ","ሳተላይት ፈላጊ ሜትር (Sat Finder)","ኮምፓስ እና የማዕዘን መለኪያ","መሰርሰሪያ፣ ብሎኖች፣ ቁልፎች","ለመሬት ግንኙነት (grounding) ሽቦ","መሰላል እና የደህንነት ጥንቃቄ"],
+ st:["የሚፈልጉትን ሳተላይት ይምረጡ (ለምሳሌ 7°W ወይም 26°E)","ዲሽ የሚተከልበት ደቡብ ክፍት ቦታ ያግኙ፤ ዛፍና ህንጻ እንዳይከልል","ዲሽ መያዣውን በደንብ ያጥብቁ፣ ቋሚ ያድርጉት","LNB ን ያያይዙ፤ ኬብሉን ከሜትሩ ጋር ያገናኙ","አዚሙዝ እና ኤሌቬሽን አስተካክለው ምልክት እስኪገኝ ቀስ ብለው ያዙሩ","ምልክቱ ጠንካራ ሲሆን መያዣውን ያጥብቁ","ሪሲቨር ላይ ቻናል ፍለጋ (scan) ያድርጉ"]},
+en:{home:"Home",market:"Market",freq:"Frequencies",soft:"Software",inst:"Installers",guide:"Install guide",order:"Server payment",pay:"Payment",chan:"Channels",add:"Add",period:"Subscription period",d1:"1 month",d3:"3 months",d6:"6 months",d12:"1 year",srvh:"Enter your serial number and phone, then pick how long you want to pay for.",srvt:"Server payment",chpw:"Change password",cur:"Current password",npw:"New password",npw2:"Repeat new password",pwshort:"At least 6 characters.",pwdiff:"The two new passwords do not match.",pwdone:"Password changed",edit:"Edit",manage:"Added items",back:"Back",newi:"Add new",
+ hero_t:"Everything you need to buy, install and tune a satellite dish",hero_s:"Dishes and gear, frequencies, software and server files, and a directory of installers in one place. Orders go straight to Telegram.",
+ quick:"Quick access",latest:"Latest items",sats:"Satellites",search:"Search...",price:"Price",askprice:"Call for price",orderbtn:"Order",sample:"Example",
+ empty:"Nothing added yet.",title:"Title",desc:"Description",extra:"Details (frequency, satellite, area)",photo:"Photo",file:"File (software / server)",type:"Type",
+ t_product:"Market item",t_freq:"Frequency",t_soft:"Software / file",t_inst:"Installer",save:"Save",cancel:"Cancel",close:"Close",pw:"Password",pwh:"Only the owner can open this.",unlock:"Unlock",wrong:"Wrong password.",
+ saving:"Saving...",saved:"Saved",fail:"Could not save. Open this page signed in as the owner account.",link:"File link (for example a Telegram channel link)",tfail:"That file type is not supported. Use a link.",del:"Delete",sure:"Sure?",openf:"Open file",
+ name:"Name",phone:"Phone",area:"Area",note:"Note",serial:"Serial number",serialh:"Enter your receiver's serial number",msg:"Message",copy:"Copy",copied:"Copied",tg:"Send on Telegram",tgnote:"Tap a Telegram button below. Telegram opens with the message already typed. Just press send.",
+ reg:"Register as an installer",regt:"Installer registration",regs:"If you install dishes, send your name, phone and the area you work in. Your listing is added to the page.",
+ main_ch:"Main channel",disc_ch:"Discussion channel",contact:"Contact",acc:"Payment accounts",cbe:"Commercial Bank (CBE)",boa:"Bank of Abyssinia (BoA)",tele:"Telebirr",
+ tools:"Tools an installer needs",steps:"Installation steps",theme:"Dark / Light",lang:"Language",order_to:"Order",nodb:"Could not load data.",
+ ex_note:"This is an example. The owner adds the real data.",pickup:"Item",hello:"Hello, I would like to order.",
+ tl:["Dish reflector (size depends on the satellite)","LNB and LNB bracket","Receiver and remote","RG6 coaxial cable","F-connectors and weatherproof tape","Satellite finder meter","Compass and angle gauge","Drill, bolts and spanners","Grounding wire","Ladder and safety gear"],
+ st:["Pick the satellite (for example 7°W or 26°E)","Find an open spot facing the sky with no trees or buildings in the way","Fix the mount firmly and make it plumb","Attach the LNB and connect the cable to the meter","Set azimuth and elevation, then turn slowly until a signal appears","Tighten the mount when the signal is strongest","Run a channel scan on the receiver"]},
+ti:{home:"ቤት",market:"ዕዳጋ",freq:"ፍሪኩዌንሲ",soft:"ሶፍትዌር",inst:"ዲሽ ተካሎታት",guide:"መምርሒ ተከላ",order:"ክፍሊት ሰርቨር",pay:"ክፍሊት",chan:"ቻናላት",add:"ወስኽ",period:"ግዜ ክፍሊት",d1:"1 ወርሒ",d3:"3 ወርሒ",d6:"6 ወርሒ",d12:"1 ዓመት",srvh:"ሲርያል ቁጽርን ተሌፎንን ኣእትዉ፣ ግዜ ምረጹ።",
+ hero_t:"ዲሽ ንምግዛእ፣ ንምትካልን ንምምዕዳውን ዘድልየኩም ኩሉ",hero_s:"ዲሽን መሳርሒታትን፣ ፍሪኩዌንሲታት፣ ሶፍትዌርን ሰርቨር ፋይላትን፣ ዲሽ ተካሎታት ኣብ ሓደ ቦታ። ትእዛዝ ብቐጥታ ናብ ቴሌግራም ይለኣኽ።",
+ quick:"ቅልጡፍ መእተዊ",latest:"ሓደስቲ ኣቕሑት",sats:"ሳተላይታት",search:"ድለይ...",price:"ዋጋ",askprice:"ንዋጋ ደውሉ",orderbtn:"ኣዝዝ",sample:"ኣብነት",
+ empty:"ክሳብ ሕጂ ዝተወሰኸ የለን።",title:"ኣርእስቲ",desc:"መግለጺ",extra:"ተወሳኺ ዝርዝር (ፍሪኩዌንሲ፣ ሳተላይት፣ ቦታ)",photo:"ፎቶ",file:"ፋይል (ሶፍትዌር / ሰርቨር)",type:"ዓይነት",
+ t_product:"ናይ ዕዳጋ ኣቕሓ",t_freq:"ፍሪኩዌንሲ",t_soft:"ሶፍትዌር / ፋይል",t_inst:"ዲሽ ተካላይ",save:"ሕለፍ",cancel:"ሰርዝ",close:"ዕጸው",pw:"ቃለ-ምስጢር",pwh:"ወናኒ ጥራይ እዩ ክኸፍቶ ዝኽእል።",unlock:"ክፈት",wrong:"ቃለ-ምስጢር ጌጋ እዩ።",
+ saving:"ይሕልፍ ኣሎ...",saved:"ተሓልዩ",fail:"ምሕላው ኣይተኻኣለን። ብወናኒ ኣካውንት ከም ዝኣተኹም ኣረጋግጹ።",link:"ሊንክ ፋይል",tfail:"እዚ ዓይነት ፋይል ኣይድገፍን። ሊንክ ተጠቐሙ።",del:"ደምስስ",sure:"ርግጸኛ ዲኹም?",openf:"ፋይል ክፈት",
+ name:"ስም",phone:"ተሌፎን",area:"ቦታ",note:"መዘኻኸሪ",serial:"ሲርያል ቁጽሪ",serialh:"ናይ ሪሲቨርኩም ሲርያል ቁጽሪ ኣእትዉ",msg:"መልእኽቲ",copy:"ቅዳሕ",copied:"ተቐዲሑ",tg:"ብቴሌግራም ለኣኽ",tgnote:"ኣብ ታሕቲ ዘሎ ናይ ቴሌግራም መጠወቒ ጠውቑ። ቴሌግራም ይኽፈት፣ መልእኽቲ ተጻሒፉ ይጽበ። «ለኣኽ» ጥራይ ጠውቑ።",
+ reg:"ከም ዲሽ ተካላይ ተመዝገብ",regt:"ምዝገባ ዲሽ ተካሎታት",regs:"ዲሽ እንተትክሉ ስምኩም፣ ተሌፎንኩምን ዝሰርሑሉ ቦታን ለኣኹ።",
+ main_ch:"ቀዳማይ ቻናል",disc_ch:"ናይ ዘተ ቻናል",contact:"ርኸቡና",acc:"ናይ ክፍሊት ኣካውንታት",cbe:"ንግዳዊ ባንኪ (CBE)",boa:"ባንኪ ኣቢሲንያ (BoA)",tele:"ቴሌብር",
+ tools:"ንዲሽ ተካላይ ዘድልዩ መሳርሒታት",steps:"ደረጃታት ተከላ",theme:"ጸሊም / ብሩህ",lang:"ቋንቋ",order_to:"ትእዛዝ",nodb:"ሓበሬታ ምምጻእ ኣይተኻኣለን።",
+ ex_note:"እዚ ኣብነት እዩ። ሓቀኛ ሓበሬታ ብወናኒ ይወሰኽ።",pickup:"ኣቕሓ",hello:"ሰላም፣ ክእዝዝ ደልየ።",
+ tl:["ሳሕኒ ዲሽ","LNB ከምኡውን መሓዝ","ሪሲቨርን ሪሞትን","RG6 ኮኣክሲያል ኬብል","F-ኮነክተራትን ማይ ዘየእቱ ቴፕ","ሳተላይት ርከብ ሜተር","ኮምፓስ","መብሰልስሊ፣ ብሎኖታት፣ መፍትሕታት","ናይ ምድሪ ግንኙነት ሽጉጥ","መሰላልን ድሕነትን"],
+ st:["ዝደለኹምዎ ሳተላይት ምረጹ","ክፉት ቦታ ደቡብ ኣንጻር ሰማይ ርኸቡ","መሓዝ ብሩህ ሓዝዎ","LNB ኣሕዝዎ፣ ኬብል ምስ ሜተር ኣተኣሳስርዎ","ኣዚሙዝን ኤሌቨሽንን ኣመዓራርዩ፣ ምልክት ክሳብ ዝርከብ ቀስ ኢልኩም ኣዙርዎ","ምልክት ምስ ጠጠወ መሓዝ ኣጥብቕዎ","ኣብ ሪሲቨር ቻናል ድለዩ (scan)"]},
+so:{home:"Hoyga",market:"Suuqa",freq:"Frekuwensi",soft:"Software",inst:"Rakibayaasha",guide:"Hagaha rakibidda",order:"Lacag bixinta server-ka",pay:"Lacag bixin",chan:"Kanaalada",add:"Ku dar",edit:"Wax ka bedel",del:"Tirtir",save:"Kaydi",close:"Xir",back:"Dib u noqo",manage:"Wixii lagu daray",newi:"Mid cusub ku dar",
+ d1:"1 bil",d3:"3 bilood",d6:"6 bilood",d12:"1 sano",period:"Muddada",srvh:"Geli lambarka serial-ka iyo taleefanka, kadibna dooro muddada.",srvt:"Lacag bixinta server-ka",
+ price:"Qiimo",askprice:"Wac si aad u ogaato qiimaha",orderbtn:"Dalbo",copy:"Koobi",copied:"La koobiyeeyay",name:"Magac",phone:"Taleefan",serial:"Lambarka serial-ka",search:"Raadi...",empty:"Wax lama darin weli.",
+ main_ch:"Kanaalka ugu muhiimsan",disc_ch:"Kanaalka wada hadalka",contact:"Nala soo xiriir",acc:"Akoonnada lacag bixinta",msg:"Fariin",tgnote:"Riix badhanka Telegram ee hoose. Telegram wuxuu furmayaa fariinta oo la qoray. Riix dir oo kaliya.",
+ quick:"Gelitaan degdeg ah",latest:"Alaabta cusub",sats:"Dayax-gacmeedyada",hero_t:"Wax kasta ooaad u baahan tahay si aad u gadato, u rakibto oo aad u hagaajiso saxanka dayax-gacmeedka",hero_s:"Saxamo iyo qalab, frekuwensi, software iyo faylalka server-ka, iyo liiska rakibayaasha hal meel. Dalabyadu waxay si toos ah ugu aadaan Telegram."},
+om:{home:"Jalqaba",market:"Gabaa",freq:"Fireekuwensii",soft:"Sooftiwaara",inst:"Dishii Hojjettoota",guide:"Qajeelfama",order:"Kaffaltii Sarvarii",pay:"Kaffaltii",chan:"Chaanaalota",add:"Dabali",period:"Yeroo kaffaltii",d1:"Ji'a 1",d3:"Ji'a 3",d6:"Ji'a 6",d12:"Waggaa 1",srvh:"Lakkoofsa serialii fi bilbila galchaa, yeroo filadhaa.",
+ hero_t:"Dishii bituu, dhaabuu fi sirreessuuf kan barbaachisu hunda",hero_s:"Dishii fi meeshaalee, fireekuwensii, sooftiwaarafi faayilota sarvarii, akkasumas hojjettoota dishii bakka tokkotti. Ajajni kallattiin Teelegraamitti ergama.",
+ quick:"Karaa saffisaa",latest:"Meeshaalee haaraa",sats:"Sateellaayitoota",search:"Barbaadi...",price:"Gatii",askprice:"Gatii argachuuf bilbilaa",orderbtn:"Ajaji",sample:"Fakkeenya",
+ empty:"Amma tokkollee hin dabalamne.",title:"Mataduree",desc:"Ibsa",extra:"Bal'ina (fireekuwensii, sateellaayitii, bakka)",photo:"Suuraa",file:"Faayila (sooftiwaara / sarvarii)",type:"Gosa",
+ t_product:"Meeshaa gabaa",t_freq:"Fireekuwensii",t_soft:"Sooftiwaara / faayila",t_inst:"Hojjettaa dishii",save:"Olkaa'i",cancel:"Haqi",close:"Cufi",pw:"Jecha icciitii",pwh:"Abbaan qofti kana banuu danda'a.",unlock:"Bani",wrong:"Jechi icciitii dogoggora.",
+ saving:"Olkaa'amaa jira...",saved:"Olkaa'ameera",fail:"Olkaa'uun hin danda'amne. Akka abbaa ta'uun galtan mirkaneessaa.",del:"Haqi",sure:"Mirkaneeffattaa?",openf:"Faayila bani",
+ name:"Maqaa",phone:"Bilbila",area:"Bakka",note:"Yaadannoo",serial:"Lakkoofsa serialii",serialh:"Lakkoofsa serialii receiver keessanii galchaa",msg:"Ergaa",copy:"Waraabi",copied:"Waraabameera",tg:"Teelegraamiin ergi",tgnote:"Button Teelegraamii armaan gaditti tuqaa. Teelegraamii ergaa barreeffamee wajjin ni banama. «Ergi» qofa tuqaa.",
+ reg:"Hojjettaa dishii ta'ee galmaa'i",regt:"Galmee hojjettoota dishii",regs:"Yoo dishii dhaabdan maqaa, bilbilaafi bakka hojjettan ergaa.",
+ main_ch:"Chaanaala guddaa",disc_ch:"Chaanaala marii",contact:"Nu quunnamaa",acc:"Akkaawuntii kaffaltii",cbe:"Baankii Daldalaa (CBE)",boa:"Baankii Abbisiiniyaa (BoA)",tele:"Telebirr",
+ tools:"Meeshaalee hojjettaa dishii barbaachisu",steps:"Tarkaanfii dhaabbii",theme:"Dukkana / Ifaa",lang:"Afaan",order_to:"Ajaja",nodb:"Odeeffannoo fiduun hin danda'amne.",
+ ex_note:"Kun fakkeenya. Odeeffannoon dhugaa abbaadhaan dabalama.",pickup:"Meeshaa",hello:"Akkam, ajajuu barbaada.",
+ tl:["Saanii dishii","LNB fi qabsiistuu","Receiver fi remote","Wayirii RG6","F-connector fi teeppii bishaan hin seenne","Meetira sateellaayitii","Kompaasii","Qoreen, boolotii fi furtuu","Wayirii lafa (grounding)","Daaraa fi eegumsa"],
+ st:["Sateellaayitii filadhaa","Bakka banaa, samiitti garagarsiisu barbaadaa","Qabsiistuu cimsaa","LNB qabsiisaa, wayirii meetira waliin wal qabsiisaa","Azimuth fi elevation sirreessaa, mallattoon hanga argamutti suuta jedhaa naannessaa","Mallattoon cimsee jirutti qabsiistuu cimsaa","Receiver irratti chaanaala barbaadaa (scan)"]}
+};
+var SAMPLES=[
+ {id:"s1",type:"product",title:{am:"ሙሉ ዲሽ ስብስብ (ሳህን + LNB + ሪሲቨር)",en:"Complete dish kit (dish + LNB + receiver)"},desc:{am:"ለቤት የሚሆን ሙሉ ስብስብ። ዋጋው እንደ ሳህኑ መጠን ይለያያል።",en:"A full home kit. Price depends on dish size."}},
+ {id:"s2",type:"product",title:{am:"HD ሪሲቨር",en:"HD receiver"},desc:{am:"ሲሪያል ቁጥርና ሰርቨር ፋይል የሚቀበል ሪሲቨር።",en:"Receiver that accepts a serial number and server file."}},
+ {id:"s3",type:"product",title:{am:"ዩኒቨርሳል LNB",en:"Universal LNB"},desc:{am:"ነጠላ እና ድርብ ውጤት አማራጮች።",en:"Single and twin output options."}},
+ {id:"s4",type:"product",title:{am:"ሳተላይት ፈላጊ ሜትር",en:"Satellite finder meter"},desc:{am:"ዲሽ ሲያስተካክሉ ምልክት ለማየት።",en:"Shows signal while you aim the dish."}},
+ {id:"s5",type:"product",title:{am:"RG6 ኮአክሲያል ኬብል",en:"RG6 coaxial cable"},desc:{am:"በሜትር የሚሸጥ፣ ኮኔክተር ጨምሮ።",en:"Sold by the metre, connectors included."}},
+ {id:"f1",type:"freq",title:{am:"Nilesat / Eutelsat 7°W",en:"Nilesat / Eutelsat 7°W"},extra:{am:"ምህዋር ቦታ 7° ምዕራብ",en:"Orbital position 7° West"}},
+ {id:"f2",type:"freq",title:{am:"Arabsat Badr 26°E",en:"Arabsat Badr 26°E"},extra:{am:"ምህዋር ቦታ 26° ምስራቅ",en:"Orbital position 26° East"}},
+ {id:"f3",type:"freq",title:{am:"Hotbird 13°E",en:"Hotbird 13°E"},extra:{am:"ምህዋር ቦታ 13° ምስራቅ",en:"Orbital position 13° East"}},
+ {id:"f4",type:"freq",title:{am:"Yahsat 1A 52.5°E",en:"Yahsat 1A 52.5°E"},extra:{am:"ምህዋር ቦታ 52.5° ምስራቅ",en:"Orbital position 52.5° East"}},
+ {id:"f5",type:"freq",title:{am:"Intelsat 20 68.5°E",en:"Intelsat 20 68.5°E"},extra:{am:"ምህዋር ቦታ 68.5° ምስራቅ",en:"Orbital position 68.5° East"}}
+];
+var ICON={
+ home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ market:'<path d="M4 7h16l-1.5 11a2 2 0 0 1-2 1.7h-9A2 2 0 0 1 5.5 18L4 7zM9 7a3 3 0 0 1 6 0"/>',
+ freq:'<path d="M3 12h3l2-6 4 12 3-9 2 3h4"/>',
+ soft:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M5 19h14"/>',
+ inst:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M17 8h4M19 6v4"/>',
+ guide:'<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM8 4v13a3 3 0 0 0 3 3"/>',
+ order:'<path d="M4 5h16v14H4zM8 10h8M8 14h5"/>',
+ pay:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/>',
+ chan:'<path d="M21 4L3 11l6 2 2 6 3-4 5 3z"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ dish:'<path d="M5 9a9 9 0 0 0 10 10M3 11a11 11 0 0 0 10 10L5 9 3 11zM13 11l5-5M17 4l3 3M14 14l4 4"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
+ moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'
+};
+function ic(n,w){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||1.9)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICON[n]+'</svg>'}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+var S={lang:"am",theme:null,view:"home",items:[],loaded:false,q:"",unlocked:false,sure:null,drawer:false,db:null,assets:null,canEdit:false,art:null,local:{},busy:false,editId:null,msure:null,adminHash:ADMIN_HASH};
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+S.lang=store("ed_lang")||"am"; if(!T[S.lang])S.lang="am";
+var th=store("ed_theme"); if(th==="light"||th==="dark"){S.theme=th;document.documentElement.setAttribute("data-theme",th)}
+function t(k){return (T[S.lang]&&T[S.lang][k])||T.en[k]||k}
+function L(o){if(!o)return "";if(typeof o==="string")return o;return o[S.lang]||o.am||o.en||""}
+function isDark(){return S.theme?S.theme==="dark":window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches}
+
+var $=function(id){return document.getElementById(id)};
+function toast(m){var e=$("toast");e.textContent=m;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove("show")},1800)}
+function copy(txt){
+  var done=function(){toast(t("copied"))};
+  try{navigator.clipboard.writeText(txt).then(done,function(){fb()})}catch(e){fb()}
+  function fb(){var a=document.createElement("textarea");a.value=txt;document.body.appendChild(a);a.select();try{document.execCommand("copy");done()}catch(e){}a.remove()}
+}
+
+/* data */
+function hiddenIds(){return S.items.filter(function(i){return i.type==="_hide"}).map(function(i){return i.ref})}
+function allItems(){
+  var hid=hiddenIds();
+  var real=S.items.filter(function(i){return i.type!=="_hide"});
+  var out=real.map(function(d){return Object.assign({sample:false},d)});
+  SAMPLES.forEach(function(s){ if(hid.indexOf(s.id)<0&&!real.some(function(r){return r.type===s.type})){ out.push(Object.assign({sample:true},s)) } });
+  return out;
+}
+function ofType(ty){
+  var hid=hiddenIds();
+  var r=S.items.filter(function(i){return i.type===ty}).sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0)});
+  if(r.length)return r.map(function(d){return Object.assign({sample:false},d)});
+  return SAMPLES.filter(function(s){return s.type===ty&&hid.indexOf(s.id)<0}).map(function(s){return Object.assign({sample:true},s)});
+}
+
+/* views */
+function phImg(it){
+  var u=it.imgPath?(S.local[it.imgPath]||it.imgPath):"";
+  return '<div class="ph">'+(u?'<img src="'+esc(u)+'" alt="" loading="lazy">':ic("dish",1.4))+'</div>';
+}
+function delBtn(it){
+  if(!S.unlocked)return "";
+  return '<button class="btn sm" data-act="edit" data-id="'+esc(it.id)+'">'+esc(t("edit"))+'</button><button class="btn sm del" data-act="ddel2" data-id="'+esc(it.id)+'">'+esc(S.msure===it.id?t("sure"):t("del"))+'</button>';
+}
+function productCard(it){
+  var u=it.imgPath?(S.local[it.imgPath]||it.imgPath):"";
+  var price=it.price?'<div class="price" style="font-size:17px">'+esc(it.price)+'</div>':'<div class="price" style="font-size:14px;line-height:1.35">'+esc(t("askprice"))+'</div>';
+  return '<article class="card"><button class="ph phb" data-act="detail" data-id="'+esc(it.id)+'" aria-label="'+esc(L(it.title))+'">'+(u?'<img src="'+esc(u)+'" alt="" loading="lazy">':ic("dish",1.4))+'</button><div class="cb">'+price+'</div></article>';
+}
+function detailModal(id){
+  var it=allItems().filter(function(x){return x.id===id})[0]; if(!it)return;
+  var u=it.imgPath?(S.local[it.imgPath]||it.imgPath):"";
+  openModal((u?'<img class="dimg" src="'+esc(u)+'" alt="">':'')+'<h3>'+esc(L(it.title))+'</h3>'+
+   (it.price?'<div class="price" style="font-size:18px">'+esc(it.price)+'</div>':'')+
+   (L(it.desc)?'<p class="sub" style="margin:0;white-space:pre-wrap">'+esc(L(it.desc))+'</p>':'')+
+   '<div class="row" style="padding:0"><button class="btn pri" data-act="order" data-id="'+esc(it.id)+'">'+esc(t("orderbtn"))+'</button>'+
+   (S.unlocked?'<button class="btn" data-act="edit" data-id="'+esc(it.id)+'">'+esc(t("edit"))+'</button><button class="btn del" data-act="ddel" data-id="'+esc(it.id)+'">'+esc(S.msure===it.id?t("sure"):t("del"))+'</button>':'')+
+   '<button class="btn" data-act="close">'+esc(t("close"))+'</button></div>');
+}
+function freqCard(it){
+  return '<article class="freq">'+(it.sample?'<span class="tag ex">'+esc(t("sample"))+'</span>':'')+'<span class="pos">'+esc(L(it.title))+'</span>'+
+   (L(it.extra)?'<span>'+esc(L(it.extra))+'</span>':'')+(L(it.desc)?'<span style="color:var(--muted);font-size:13px;white-space:pre-wrap">'+esc(L(it.desc))+'</span>':'')+
+   (it.sample?'<span style="color:var(--muted);font-size:12px">'+esc(t("ex_note"))+'</span>':'')+'<div class="row">'+delBtn(it)+'</div></article>';
+}
+function softCard(it){
+  var href=it.link?it.link:(it.fileId?"/_blob/"+encodeURIComponent(it.fileId):"");
+  var f=href?'<a class="btn sm pri" target="_blank" rel="noopener" href="'+esc(href)+'">'+esc(t("openf"))+'</a>':'';
+  return '<article class="card">'+phImg(it)+'<div class="cb"><h3>'+esc(L(it.title))+'</h3>'+(L(it.desc)?'<p>'+esc(L(it.desc))+'</p>':'')+
+   (it.fileName?'<p>'+esc(it.fileName)+'</p>':'')+'<div class="row">'+f+delBtn(it)+'</div></div></article>';
+}
+function instCard(it){
+  return '<article class="card"><div class="cb"><h3>'+esc(L(it.title))+'</h3>'+(it.extra?'<p>'+esc(it.extra)+'</p>':'')+
+   (it.price?'<p class="price">'+esc(it.price)+'</p>':'')+(L(it.desc)?'<p>'+esc(L(it.desc))+'</p>':'')+'<div class="row">'+delBtn(it)+'</div></div></article>';
+}
+function match(it){var q=S.q.trim().toLowerCase();if(!q)return true;return (L(it.title)+" "+L(it.desc)+" "+L(it.extra)).toLowerCase().indexOf(q)>-1}
+function searchBox(){return '<input class="search" id="q" type="text" value="'+esc(S.q)+'" placeholder="'+esc(t("search"))+'" aria-label="'+esc(t("search"))+'">'}
+function list(ty,fn,cls){
+  var arr=ofType(ty).filter(match);
+  if(!arr.length)return '<div class="empty">'+esc(t("empty"))+'</div>';
+  return '<div class="'+(cls||"grid")+'">'+arr.map(fn).join("")+'</div>';
+}
+function orbit(){
+  return '<svg class="orbit" viewBox="0 0 260 180" aria-hidden="true"><path d="M10 170 Q130 -40 250 170" fill="none" style="stroke:var(--line)" stroke-width="2" stroke-dasharray="4 6"/><circle cx="64" cy="102" r="7" style="fill:var(--signal)"/><circle cx="130" cy="40" r="5" style="fill:var(--accent)"/><circle cx="196" cy="102" r="4" style="fill:var(--muted)"/></svg>';
+}
+function viewHome(){
+  var quick=[["market","market"],["freq","freq"],["soft","soft"],["inst","inst"],["guide","guide"],["order","order"],["pay","pay"],["chan","chan"]];
+  var h='<section class="hero">'+orbit()+'<img class="hl" src="logo.jpg" alt="ሀብትሽ ዲሽ"><h2>'+esc(t("hero_t"))+'</h2><p>'+esc(t("hero_s"))+'</p><div class="acts"><button class="btn pri" data-go="market">'+esc(t("market"))+'</button><a class="btn" target="_blank" rel="noopener" href="'+TG_MAIN+'">'+esc(t("main_ch"))+'</a></div></section>';
+  h+='<h2>'+esc(t("quick"))+'</h2><div class="slider">'+quick.map(function(q){return '<button class="tile" data-go="'+q[0]+'">'+ic(q[1])+'<b>'+esc(t(q[0]))+'</b></button>'}).join("")+'</div>';
+  h+='<h2>'+esc(t("latest"))+'</h2><div class="slider">'+ofType("product").map(productCard).join("")+'</div>';
+  h+='<h2>'+esc(t("sats"))+'</h2><div class="slider">'+ofType("freq").map(function(f){return '<div style="width:170px">'+freqCard(f)+'</div>'}).join("")+'</div>';
+  h+='<h2>'+esc(t("inst"))+'</h2><div class="box"><p class="sub" style="margin:0">'+esc(t("regs"))+'</p><div><button class="btn pri" data-act="reg">'+esc(t("reg"))+'</button></div></div>';
+  return h;
+}
+function viewMarket(){return '<h2>'+esc(t("market"))+'</h2>'+searchBox()+list("product",productCard)}
+function viewFreq(){return '<h2>'+esc(t("freq"))+'</h2>'+searchBox()+list("freq",freqCard)}
+function viewSoft(){
+  var arr=ofType("soft");
+  return '<h2>'+esc(t("soft"))+'</h2>'+searchBox()+(arr.length&&!arr[0].sample?list("soft",softCard):'<div class="empty">'+esc(t("empty"))+'</div>');
+}
+function viewInst(){
+  var real=S.items.some(function(i){return i.type==="inst"});
+  return '<h2>'+esc(t("regt"))+'</h2><p class="sub">'+esc(t("regs"))+'</p><p><button class="btn pri" data-act="reg">'+esc(t("reg"))+'</button></p><h2>'+esc(t("inst"))+'</h2>'+
+   (real?list("inst",instCard):'<div class="empty">'+esc(t("empty"))+'</div>');
+}
+function viewGuide(){
+  var done={};try{done=JSON.parse(store("ed_tools")||"{}")}catch(e){}
+  var tl=T[S.lang].tl||T.en.tl, st=T[S.lang].st||T.en.st;
+  return '<h2>'+esc(t("tools"))+'</h2><div class="box">'+tl.map(function(x,i){return '<label class="chk" style="color:var(--ink);font-weight:500"><input type="checkbox" data-tool="'+i+'"'+(done[i]?' checked':'')+'><span>'+esc(x)+'</span></label>'}).join("")+'</div>'+
+   '<h2>'+esc(t("steps"))+'</h2><div class="box"><ol class="steps">'+st.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ol></div>';
+}
+function accountsBox(){
+  return '<h2>'+esc(t("acc"))+'</h2><div class="box">'+ACCOUNTS.map(function(a){return '<div class="acc"><div><b>'+esc(t(a.k))+'</b><span>'+a.n+'</span></div><button class="btn sm" data-copy="'+a.n+'">'+esc(t("copy"))+'</button></div>'}).join("")+'</div>';
+}
+function viewOrder(){
+  var ds=["d1","d3","d6","d12"];
+  return '<h2>'+esc(t("order"))+'</h2><div class="box"><p class="sub" style="margin:0">'+esc(t("srvh"))+'</p>'+
+   field("s_serial",t("serial"),"")+field("s_phone",t("phone"),"")+
+   '<div class="dlabel" style="margin:4px 0 0">'+esc(t("period"))+'</div><div class="chips" id="s_dur">'+ds.map(function(d,i){return '<button class="chip'+(i===0?" on":"")+'" data-dur="'+d+'">'+esc(t(d))+'</button>'}).join("")+'</div>'+
+   '<label for="s_out">'+esc(t("msg"))+'<textarea id="s_out" readonly></textarea></label><p class="sub" style="margin:0;font-size:13px">'+esc(t("tgnote"))+'</p>'+
+   '<div class="row" style="padding:0"><button class="btn" data-act="copysrv">'+esc(t("copy"))+'</button>'+tgButtons()+'</div></div>'+accountsBox()+contactBox();
+}
+function sRebuild(){
+  var g=function(i){var e=$(i);return e?e.value.trim():""};
+  var on=document.querySelector("#s_dur .chip.on"),d=on?on.dataset.dur:"d1";
+  if(!$("s_out"))return;
+  var txt=[t("srvt"),t("period")+": "+t(d),t("serial")+": "+g("s_serial"),t("phone")+": "+g("s_phone")].join("\n");
+  $("s_out").value=txt;
+  Array.prototype.forEach.call(document.querySelectorAll("#page .tgb"),function(a){a.href="https://t.me/"+a.dataset.u+"?text="+encodeURIComponent(txt)});
+}
+function contactBox(){
+  return '<h2>'+esc(t("contact"))+'</h2><div class="box">'+
+   USERS.map(function(u){return '<a class="lnk" target="_blank" rel="noopener" href="https://t.me/'+u+'"><span>@'+u+'</span><span>Telegram</span></a>'}).join("")+
+   PHONES.map(function(p){return '<div class="acc"><span>'+p+'</span><button class="btn sm" data-copy="'+p+'">'+esc(t("copy"))+'</button></div>'}).join("")+'</div>';
+}
+function viewPay(){
+  return '<h2>'+esc(t("acc"))+'</h2><div class="box">'+ACCOUNTS.map(function(a){return '<div class="acc"><div><b>'+esc(t(a.k))+'</b><span>'+a.n+'</span></div><button class="btn sm" data-copy="'+a.n+'">'+esc(t("copy"))+'</button></div>'}).join("")+'</div>'+contactBox();
+}
+function viewChan(){
+  return '<h2>'+esc(t("chan"))+'</h2><div class="box"><a class="lnk" target="_blank" rel="noopener" href="'+TG_MAIN+'"><span><b>'+esc(t("main_ch"))+'</b><br>'+TG_MAIN+'</span></a><a class="lnk" target="_blank" rel="noopener" href="'+TG_DISC+'"><span><b>'+esc(t("disc_ch"))+'</b><br>'+TG_DISC+'</span></a></div>'+contactBox();
+}
+var VIEWS={home:viewHome,market:viewMarket,freq:viewFreq,soft:viewSoft,inst:viewInst,guide:viewGuide,order:viewOrder,pay:viewPay,chan:viewChan};
+var NAV=["home","market","freq","soft","inst","guide","order","pay","chan"];
+
+function renderDrawer(){
+  var h='<div class="brand"><img class="lg" src="logo.jpg" alt="" width="44" height="44"><div><b>ሀብትሽ ዲሽ</b><small>አውነተኛ የዲሽ መረጃ</small></div><button class="plus-sm" data-act="plus" aria-label="+" title="+">'+ic("plus",2.6)+'</button></div><nav class="nav">'+
+   NAV.map(function(n){return '<button data-go="'+n+'" class="'+(S.view===n?"on":"")+'">'+ic(n)+'<span>'+esc(t(n))+'</span></button>'}).join("")+'</nav>';
+  h+='<div class="dlabel">'+esc(t("lang"))+'</div><div class="chips">'+[["am","አማርኛ"],["en","English"],["ti","ትግርኛ"],["om","Oromoo"],["so","Soomaali"]].map(function(l){return '<button class="chip'+(S.lang===l[0]?" on":"")+'" data-lang="'+l[0]+'">'+l[1]+'</button>'}).join("")+'</div>';
+  h+='<div class="dlabel">'+esc(t("theme"))+'</div><div class="chips"><button class="chip'+(S.theme==="light"?" on":"")+'" data-theme="light">Light</button><button class="chip'+(S.theme==="dark"?" on":"")+'" data-theme="dark">Dark</button><button class="chip'+(!S.theme?" on":"")+'" data-theme="">Auto</button></div>';
+  h+='<div class="dlabel">'+esc(t("chan"))+'</div><a class="lnk" target="_blank" rel="noopener" href="'+TG_MAIN+'"><span>'+esc(t("main_ch"))+'</span></a><a class="lnk" target="_blank" rel="noopener" href="'+TG_DISC+'"><span>'+esc(t("disc_ch"))+'</span></a>';
+  $("drawer").innerHTML=h;
+}
+function renderBar(){
+  var b=function(n){return '<button data-go="'+n+'" class="'+(S.view===n?"on":"")+'">'+ic(n)+'<span>'+esc(t(n))+'</span></button>'};
+  $("bar").innerHTML=b("home")+b("market")+b("order")+b("freq")+b("soft");
+}
+function renderMain(){
+  $("page").innerHTML=VIEWS[S.view]();
+  $("ttl").textContent=S.view==="home"?"ሀብትሽ ዲሽ":t(S.view);
+  if(S.view==="order")sRebuild();
+  var q=$("q"); if(q){q.addEventListener("input",function(){S.q=q.value;var pos=q.selectionStart;renderMain();var n=$("q");if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}})}
+}
+function renderAll(){
+  $("langSel").value=S.lang;
+  $("themeBtn").innerHTML=isDark()?ic("sun"):ic("moon");
+  document.documentElement.lang=S.lang==="om"?"om":S.lang;
+  renderDrawer();renderBar();renderMain();
+}
+function go(v){S.view=v;S.q="";S.drawer=false;$("drawer").classList.remove("open");$("scrim").classList.remove("show");renderAll();window.scrollTo(0,0)}
+
+/* modals */
+function openModal(html){var m=$("modal");m.innerHTML='<div class="sheet" role="dialog" aria-modal="true">'+html+'</div>';m.classList.add("show")}
+function closeModal(){var m=$("modal");m.classList.remove("show");m.innerHTML=""}
+function field(id,label,ph,tp){return '<label for="'+id+'">'+esc(label)+'<input type="'+(tp||"text")+'" id="'+id+'" placeholder="'+esc(ph||"")+'"></label>'}
+function tgButtons(){return USERS.map(function(u){return '<a class="btn pri tgb" data-u="'+u+'" target="_blank" rel="noopener" href="https://t.me/'+u+'">@'+u+'</a>'}).join("")}
+function msgModal(title,kind,pre){
+  openModal('<h3>'+esc(title)+'</h3>'+
+   (kind==="order"?'<p class="sub" style="margin:0">'+esc(pre||"")+'</p>':"")+
+   (kind==="serial"?field("m_serial",t("serial"),""):"")+
+   field("m_name",t("name"),"")+field("m_phone",t("phone"),"","text")+field("m_area",t("area"),"")+
+   (kind==="reg"?field("m_note",t("desc"),""):field("m_note",t("note"),""))+
+   '<label for="m_out">'+esc(t("msg"))+'<textarea id="m_out" readonly></textarea></label><p class="sub" style="margin:0;font-size:13px">'+esc(t("tgnote"))+'</p>'+
+   '<div class="row" style="padding:0"><button class="btn" data-act="copymsg">'+esc(t("copy"))+'</button>'+tgButtons()+'<button class="btn" data-act="close">'+esc(t("close"))+'</button></div>');
+  var build=function(){
+    var g=function(i){var e=$(i);return e?e.value.trim():""};
+    var lines=[];
+    if(kind==="order")lines.push(t("hello"),t("pickup")+": "+pre);
+    if(kind==="serial")lines.push(t("serial")+": "+g("m_serial"));
+    if(kind==="reg")lines.push(t("regt"));
+    lines.push(t("name")+": "+g("m_name"),t("phone")+": "+g("m_phone"),t("area")+": "+g("m_area"));
+    if(g("m_note"))lines.push(t("note")+": "+g("m_note"));
+    var txt=lines.join("\n");$("m_out").value=txt;
+    Array.prototype.forEach.call($("modal").querySelectorAll(".tgb"),function(a){a.href="https://t.me/"+a.dataset.u+"?text="+encodeURIComponent(txt)});
+  };
+  $("modal").querySelector(".sheet").addEventListener("input",build);build();
+}
+function pwModal(){
+  openModal('<h3>'+esc(t("add"))+'</h3><p class="sub" style="margin:0">'+esc(t("pwh"))+'</p>'+field("pw",t("pw"),"","password")+'<div class="msg err" id="pwm"></div><div class="row" style="padding:0"><button class="btn pri" data-act="unlock">'+esc(t("unlock"))+'</button><button class="btn" data-act="close">'+esc(t("cancel"))+'</button></div>');
+  setTimeout(function(){var e=$("pw");if(e)e.focus()},50);
+}
+function typeLabel(ty){return t({product:"t_product",freq:"t_freq",soft:"t_soft",inst:"t_inst"}[ty]||"t_product")}
+function manageModal(){
+  var real=S.items.filter(function(i){return i.type!=="_hide"}).sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0)});
+  var smp=allItems().filter(function(x){return x.sample});
+  var all=real.concat(smp);
+  var rows=all.length?all.map(function(it){
+    var sure=S.msure===it.id;
+    return '<div class="mrow"><b>'+esc(L(it.title))+'<small>'+esc(typeLabel(it.type))+(it.sample?' · '+esc(t("sample")):'')+'</small></b><button class="btn sm" data-act="edit" data-id="'+esc(it.id)+'">'+esc(t("edit"))+'</button><button class="btn sm del" data-act="mdel" data-id="'+esc(it.id)+'">'+esc(sure?t("sure"):t("del"))+'</button></div>';
+  }).join(""):'<div class="empty">'+esc(t("empty"))+'</div>';
+  openModal('<h3>'+esc(t("manage"))+'</h3><button class="btn pri" data-act="newi">+ '+esc(t("newi"))+'</button><div class="mlist">'+rows+'</div><div class="msg" id="am"></div><div class="row" style="padding:0"><button class="btn" data-act="chpw">'+esc(t("chpw"))+'</button><button class="btn" data-act="close">'+esc(t("close"))+'</button></div>');
+}
+function chpwModal(){
+  openModal('<h3>'+esc(t("chpw"))+'</h3>'+field("p_cur",t("cur"),"","password")+field("p_new",t("npw"),"","password")+field("p_new2",t("npw2"),"","password")+
+   '<div class="msg" id="am"></div><div class="row" style="padding:0"><button class="btn pri" id="p_save" data-act="dochpw">'+esc(t("save"))+'</button><button class="btn" data-act="back">'+esc(t("back"))+'</button></div>');
+}
+async function doChpw(){
+  if(S.busy)return;
+  var m=$("am"),g=function(i){return $(i).value.trim()};m.className="msg err";
+  if(h53(g("p_cur"))!==S.adminHash){m.textContent=t("wrong");return}
+  if(g("p_new").length<6){m.textContent=t("pwshort");return}
+  if(g("p_new")!==g("p_new2")){m.textContent=t("pwdiff");return}
+  var prevH=S.adminHash,nh=h53(g("p_new"));S.busy=true;$("p_save").disabled=true;m.className="msg";m.textContent=t("saving");
+  try{
+    if(!S.art&&window.claude)throw new Error("noart");
+    S.adminHash=nh;
+    await publishAll({"data/admin.json":{content:JSON.stringify({h:nh}),contentType:"application/json"}});
+    S.busy=false;toast(t("pwdone"));manageModal();
+  }catch(e){
+    S.busy=false;S.adminHash=prevH;$("p_save").disabled=false;
+    m.className="msg err";m.textContent=t("fail")+" ("+((e&&(e.code||e.message))||"?")+")";
+  }
+}
+function addModal(id){
+  var it=id?allItems().filter(function(x){return x.id===id})[0]:null;
+  S.editId=(it&&!it.sample)?it.id:null;
+  openModal('<h3>'+esc(it?t("edit"):t("newi"))+'</h3>'+
+   '<label for="a_type">'+esc(t("type"))+'<select id="a_type"><option value="product">'+esc(t("t_product"))+'</option><option value="freq">'+esc(t("t_freq"))+'</option><option value="soft">'+esc(t("t_soft"))+'</option><option value="inst">'+esc(t("t_inst"))+'</option></select></label>'+
+   field("a_title",t("title"),"")+field("a_price",t("price")+" / "+t("phone"),"")+
+   '<label for="a_desc">'+esc(t("desc"))+'<textarea id="a_desc" style="min-height:64px"></textarea></label>'+
+   '<label for="a_img">'+esc(t("photo"))+'<input type="file" id="a_img" accept="image/*"></label>'+field("a_link",t("link"),"https://t.me/...")+
+   '<div class="msg" id="am"></div><div class="row" style="padding:0"><button class="btn pri" id="a_save" data-act="saveitem">'+esc(t("save"))+'</button><button class="btn" data-act="back">'+esc(t("back"))+'</button></div>');
+  if(it){$("a_type").value=it.type;$("a_title").value=L(it.title);$("a_price").value=it.price||"";$("a_desc").value=L(it.desc)||it.extra||"";$("a_link").value=it.link||""}
+}
+function doUnlock(){
+  var m=$("pwm"),v=$("pw").value.trim();
+  if(h53(v)===S.adminHash){S.unlocked=true;manageModal();return}
+  m.textContent=t("wrong");
+}
+function shrink(file,max){
+  return new Promise(function(res,rej){
+    var u=URL.createObjectURL(file),im=new Image();
+    im.onload=function(){
+      var k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");
+      c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+      c.toBlob(function(b){URL.revokeObjectURL(u);b?res(b):rej(new Error("img"))},"image/jpeg",0.82);
+    };
+    im.onerror=function(){URL.revokeObjectURL(u);rej(new Error("img"))};
+    im.src=u;
+  });
+}
+var saveChain=Promise.resolve();
+function blobToUrl(b){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=rej;r.readAsDataURL(b)})}
+function dl(name,text){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"application/json"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500)}
+function publishAll(extra){
+  var files=Object.assign({"data/items.json":{content:JSON.stringify(S.items),contentType:"application/json"}},extra||{});
+  if(!S.art&&!window.claude){
+    return (async function(){
+      var ex=extra||{};
+      for(var k in ex){ if(ex[k]&&typeof ex[k]==="object"){ var u=await blobToUrl(ex[k]); S.items.forEach(function(it){if(it.imgPath===k)it.imgPath=u}); } }
+      Object.keys(files).forEach(function(k){ if(/\.json$/.test(k)){ var v=files[k]; var txt=(k==="data/items.json")?JSON.stringify(S.items):v.content; dl(k.split("/").pop(),txt) } });
+    })();
+  }
+  saveChain=saveChain.then(function(){return S.art.publish(files)});
+  return saveChain;
+}
+async function saveItem(){
+  if(S.busy)return;
+  var m=$("am"),btn=$("a_save"); m.className="msg";m.textContent=t("saving");
+  var g=function(i){return $(i).value.trim()};
+  var ttl=g("a_title"); if(!ttl){m.className="msg err";m.textContent=t("title");return}
+  S.busy=true; if(btn)btn.disabled=true;
+  var prev=S.items;
+  try{
+    if(!S.art&&window.claude)throw new Error("noart");
+    var old=S.editId?prev.filter(function(x){return x.id===S.editId})[0]:null;
+    var id=old?old.id:"i"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    var rec=Object.assign({},old||{},{id:id,type:g("a_type"),title:ttl,price:g("a_price"),desc:g("a_desc"),createdAt:old?old.createdAt:Date.now()});
+    delete rec.extra;
+    var link=g("a_link"); if(/^https:\/\//i.test(link))rec.link=link; else delete rec.link;
+    var im=$("a_img").files[0], extra={};
+    if(im){
+      var b=await shrink(im,800),np="img/"+id+"-"+Date.now().toString(36)+".jpg";
+      if(old&&old.imgPath)extra[old.imgPath]=null;
+      rec.imgPath=np;extra[np]=b;S.local[np]=URL.createObjectURL(b);
+    }
+    S.items=old?prev.map(function(x){return x.id===id?rec:x}):prev.concat([rec]);
+    renderMain();
+    await publishAll(extra);
+    S.busy=false;S.editId=null;toast(t("saved"));manageModal();
+  }catch(e){
+    S.busy=false;S.items=prev;renderMain();
+    if(btn)btn.disabled=false;
+    m.className="msg err";m.textContent=t("fail")+" ("+((e&&(e.code||e.message))||"?")+")";
+  }
+}
+function reMan(){if($("modal").classList.contains("show"))manageModal()}
+async function delItem(id){
+  if(S.msure!==id){S.msure=id;reMan();return}
+  S.msure=null;
+  var old=S.items,it=old.filter(function(x){return x.id===id})[0];
+  S.items=it?old.filter(function(x){return x.id!==id}):old.concat([{id:"h"+id,type:"_hide",ref:id,createdAt:Date.now()}]);
+  renderMain();reMan();
+  try{
+    var extra={}; if(it&&it.imgPath)extra[it.imgPath]=null;
+    await publishAll(extra);
+  }catch(e){S.items=old;renderMain();reMan();toast(t("fail")+" ("+((e&&(e.code||e.message))||"?")+")")}
+}
+
+/* events */
+document.addEventListener("click",function(e){
+  var el=e.target.closest("[data-go],[data-act],[data-lang],button[data-theme],[data-copy],[data-dur]");
+  if(!el){ if(e.target.id==="modal")closeModal(); if(e.target.id==="scrim"){S.drawer=false;$("drawer").classList.remove("open");$("scrim").classList.remove("show")} return }
+  if(el.dataset.dur){Array.prototype.forEach.call(document.querySelectorAll("#s_dur .chip"),function(c){c.classList.toggle("on",c===el)});sRebuild();return}
+  if(el.dataset.go){go(el.dataset.go);return}
+  if(el.dataset.copy!==undefined){copy(el.dataset.copy);return}
+  if(el.dataset.lang){S.lang=el.dataset.lang;store("ed_lang",S.lang);renderAll();return}
+  if(el.hasAttribute("data-theme")&&el.tagName==="BUTTON"&&el.classList.contains("chip")){
+    var v=el.dataset.theme; S.theme=v||null;
+    if(v){document.documentElement.setAttribute("data-theme",v);store("ed_theme",v)}else{document.documentElement.removeAttribute("data-theme");store("ed_theme","")}
+    renderAll();return}
+  var a=el.dataset.act;
+  if(a==="menu"){S.drawer=!S.drawer;$("drawer").classList.toggle("open",S.drawer);$("scrim").classList.toggle("show",S.drawer)}
+  else if(a==="theme"){var d=!isDark();S.theme=d?"dark":"light";document.documentElement.setAttribute("data-theme",S.theme);store("ed_theme",S.theme);renderAll()}
+  else if(a==="ddel"){if(S.msure!==el.dataset.id){S.msure=el.dataset.id;detailModal(el.dataset.id)}else delItem(el.dataset.id)}
+  else if(a==="ddel2"){if(S.msure!==el.dataset.id){S.msure=el.dataset.id;renderMain()}else delItem(el.dataset.id)}
+  else if(a==="detail")detailModal(el.dataset.id);
+  else if(a==="plus"){S.drawer=false;$("drawer").classList.remove("open");$("scrim").classList.remove("show");S.unlocked?manageModal():pwModal()}
+  else if(a==="copysrv")copy($("s_out").value);
+  else if(a==="chpw")chpwModal();
+  else if(a==="dochpw")doChpw();
+  else if(a==="newi")addModal();
+  else if(a==="edit")addModal(el.dataset.id);
+  else if(a==="back"){S.editId=null;manageModal()}
+  else if(a==="mdel")delItem(el.dataset.id);
+  else if(a==="close")closeModal();
+  else if(a==="unlock")doUnlock();
+  else if(a==="saveitem")saveItem();
+  
+  else if(a==="copymsg")copy($("m_out").value);
+  else if(a==="serial")msgModal(t("order"),"serial");
+  else if(a==="reg")msgModal(t("regt"),"reg");
+  else if(a==="order"){var it=allItems().filter(function(x){return x.id===el.dataset.id})[0];msgModal(t("order_to"),"order",it?L(it.title):"")}
+});
+document.addEventListener("input",function(e){if(e.target.id&&e.target.id.indexOf("s_")===0)sRebuild()});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&$("pw")&&document.activeElement===$("pw"))doUnlock();if(e.key==="Escape")closeModal()});
+document.addEventListener("change",function(e){
+  var tl=e.target.getAttribute&&e.target.getAttribute("data-tool");
+  if(tl!==null&&tl!==undefined&&e.target.type==="checkbox"){var d={};try{d=JSON.parse(store("ed_tools")||"{}")}catch(x){}d[tl]=e.target.checked;store("ed_tools",JSON.stringify(d))}
+});
+$("langSel").addEventListener("change",function(){S.lang=this.value;store("ed_lang",S.lang);renderAll()});
+
+renderAll();
+
+/* shared data: items live in data/items.json beside the page, so every visitor can read them */
+fetch("data/items.json").then(function(r){return r.ok?r.json():[]}).then(function(a){
+  if(Array.isArray(a)){S.items=a;S.loaded=true;renderMain()}
+}).catch(function(){});
+fetch("data/admin.json").then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&typeof j.h==="number")S.adminHash=j.h}).catch(function(){});
+if(window.claude&&window.claude.use){
+  window.claude.use("artifact").then(function(a){S.art=a},function(){});
+  window.claude.use("assets").then(function(a){S.assets=a},function(){});
+}
+})();
+</script>
+
+</body></html>
